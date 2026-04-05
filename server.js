@@ -7,6 +7,28 @@ const MY_DOMAIN = "rprox.onrender.com";
 
 app.use(express.static("public"));
 
+function rewriteHTML(html, base) {
+  return html.replace(/(href|src)="(.*?)"/g, (match, attr, link) => {
+    if (!link || link.startsWith("#") || link.startsWith("javascript:")) {
+      return match;
+    }
+
+    try {
+      let newUrl;
+
+      if (link.startsWith("http")) {
+        newUrl = link;
+      } else {
+        newUrl = new URL(link, base).href;
+      }
+
+      return `${attr}="/proxy?url=${encodeURIComponent(newUrl)}"`;
+    } catch {
+      return match;
+    }
+  });
+}
+
 app.get("/proxy", async (req, res) => {
   let target = req.query.url;
 
@@ -21,23 +43,27 @@ app.get("/proxy", async (req, res) => {
   }
 
   try {
-    const response = await fetch(target);
-    const contentType = response.headers.get("content-type");
-
-    res.set("Content-Type", contentType);
-    let data = await response.text();
-
-    // Rewrite links
-    data = data.replace(/(href|src)="(.*?)"/g, (match, attr, link) => {
-      if (link.startsWith("http")) {
-        return `${attr}="/proxy?url=${link}"`;
-      } else if (link.startsWith("/")) {
-        return `${attr}="/proxy?url=${target}${link}"`;
+    const response = await fetch(target, {
+      headers: {
+        "User-Agent": "Mozilla/5.0"
       }
-      return match;
     });
 
-    res.send(data);
+    const contentType = response.headers.get("content-type") || "";
+
+    res.set("Content-Type", contentType);
+
+    if (contentType.includes("text/html")) {
+      let data = await response.text();
+
+      data = rewriteHTML(data, target);
+
+      res.send(data);
+    } else {
+      const buffer = await response.buffer();
+      res.send(buffer);
+    }
+
   } catch (err) {
     res.send("Error loading site");
   }
