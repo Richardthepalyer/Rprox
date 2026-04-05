@@ -5,17 +5,18 @@ const app = express();
 
 app.use(express.static("public"));
 
-// Catch ALL routes
 app.get("*", async (req, res) => {
   let target = req.query.url;
 
-  // First load (from input box)
-  if (target) {
-    if (!target.startsWith("http")) {
-      target = "https://" + target;
+  // If no ?url=, try using referer (previous page)
+  if (!target) {
+    const referer = req.headers.referer;
+
+    if (referer && referer.includes("?url=")) {
+      target = referer.split("?url=")[1];
+    } else {
+      return res.send("Use ?url=");
     }
-  } else {
-    return res.send("Use ?url=");
   }
 
   try {
@@ -23,14 +24,18 @@ app.get("*", async (req, res) => {
     const contentType = response.headers.get("content-type");
 
     res.set("Content-Type", contentType);
-    const data = await response.text();
+    let data = await response.text();
 
-    // Rewrite links so they stay inside proxy
-    const fixed = data.replace(/(href|src)="\/(.*?)"/g, (match, p1, p2) => {
-      return `${p1}="/?url=${target}/${p2}"`;
+    // Rewrite links
+    data = data.replace(/(href|src)="(.*?)"/g, (match, attr, link) => {
+      if (link.startsWith("http")) {
+        return `${attr}="/?url=${link}"`;
+      } else {
+        return `${attr}="/?url=${target}${link}"`;
+      }
     });
 
-    res.send(fixed);
+    res.send(data);
 
   } catch (err) {
     res.send("Error loading site");
