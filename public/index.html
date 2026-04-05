@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Simple Proxy</title>
+</head>
+<body style="font-family: Arial; text-align: center;">
+
+  <h1>Web Proxy</h1>
+
+  <input id="url" placeholder="https://example.com" style="width:300px;">
+  <button onclick="go()">Go</button>
+
+  <br><br>
+
+  <iframe id="frame" style="width:90%; height:500px;"></iframe>
+
+  <script>
+    function go() {
+      let url = document.getElementById("url").value;
+      document.getElementById("frame").src = "/proxy?url=" + encodeURIComponent(url);
+    }
+  </script>
+
+</body>
+</html>
