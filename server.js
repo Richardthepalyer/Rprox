@@ -1,27 +1,36 @@
 const express = require("express");
 const fetch = require("node-fetch");
-const path = require("path");
 
 const app = express();
 
-// Serve frontend
 app.use(express.static("public"));
 
-// Proxy endpoint
-app.get("/proxy", async (req, res) => {
-  const url = req.query.url;
+// Catch ALL routes
+app.get("*", async (req, res) => {
+  let target = req.query.url;
 
-  if (!url) {
-    return res.send("Missing ?url=");
+  // First load (from input box)
+  if (target) {
+    if (!target.startsWith("http")) {
+      target = "https://" + target;
+    }
+  } else {
+    return res.send("Use ?url=");
   }
 
   try {
-    const response = await fetch(url);
+    const response = await fetch(target);
     const contentType = response.headers.get("content-type");
 
     res.set("Content-Type", contentType);
-    const data = await response.buffer();
-    res.send(data);
+    const data = await response.text();
+
+    // Rewrite links so they stay inside proxy
+    const fixed = data.replace(/(href|src)="\/(.*?)"/g, (match, p1, p2) => {
+      return `${p1}="/?url=${target}/${p2}"`;
+    });
+
+    res.send(fixed);
 
   } catch (err) {
     res.send("Error loading site");
