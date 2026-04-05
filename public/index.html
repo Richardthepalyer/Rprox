@@ -8,18 +8,23 @@
 
 <body>
 
+  <!-- 🔥 TOP BAR (YOU WERE LOOKING FOR THIS) -->
   <div class="topbar">
     <img src="logo.png" class="logo">
+
+    <button onclick="back()">⬅</button>
+    <button onclick="forward()">➡</button>
+
     <input id="url" placeholder="Enter URL">
+
     <button onclick="go()">Go</button>
     <button onclick="newTab()">+</button>
-    <button onclick="showHistory()">H</button>
-    <button onclick="showBookmarks()">B</button>
-    <button onclick="saveBookmark()">⭐</button>
   </div>
 
+  <!-- Tabs -->
   <div id="tabs" class="tabs"></div>
 
+  <!-- Site view -->
   <iframe id="frame"></iframe>
 
   <script src="app.js"></script>
