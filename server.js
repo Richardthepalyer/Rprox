@@ -1,22 +1,23 @@
 const express = require("express");
 const fetch = require("node-fetch");
+const path = require("path");
 
 const app = express();
+const MY_DOMAIN = "rprox.onrender.com";
 
 app.use(express.static("public"));
 
-app.get("*", async (req, res) => {
+app.get("/proxy", async (req, res) => {
   let target = req.query.url;
 
-  // If no ?url=, try using referer (previous page)
-  if (!target) {
-    const referer = req.headers.referer;
+  if (!target) return res.send("Missing URL");
 
-    if (referer && referer.includes("?url=")) {
-      target = referer.split("?url=")[1];
-    } else {
-      return res.send("Use ?url=");
-    }
+  if (!target.startsWith("http")) {
+    target = "https://" + target;
+  }
+
+  if (target.includes(MY_DOMAIN)) {
+    return res.redirect("/");
   }
 
   try {
@@ -29,17 +30,21 @@ app.get("*", async (req, res) => {
     // Rewrite links
     data = data.replace(/(href|src)="(.*?)"/g, (match, attr, link) => {
       if (link.startsWith("http")) {
-        return `${attr}="/?url=${link}"`;
-      } else {
-        return `${attr}="/?url=${target}${link}"`;
+        return `${attr}="/proxy?url=${link}"`;
+      } else if (link.startsWith("/")) {
+        return `${attr}="/proxy?url=${target}${link}"`;
       }
+      return match;
     });
 
     res.send(data);
-
   } catch (err) {
     res.send("Error loading site");
   }
+});
+
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public/index.html"));
 });
 
 const PORT = process.env.PORT || 3000;
