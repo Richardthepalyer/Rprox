@@ -1,23 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Simple Proxy</title>
+  <title>RProx</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: black;
+      color: white;
+      text-align: center;
+    }
+
+    .header {
+      padding: 20px;
+    }
+
+    .logo {
+      width: 200px;
+      margin-bottom: 10px;
+    }
+
+    .search-box {
+      margin-top: 10px;
+    }
+
+    input {
+      width: 60%;
+      max-width: 400px;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 8px;
+      background: limegreen;
+      color: black;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 5px;
+    }
+
+    button:hover {
+      background: #00ff88;
+    }
+
+    iframe {
+      width: 100%;
+      height: 75vh;
+      border: none;
+      margin-top: 15px;
+      background: white;
+    }
+
+    .footer {
+      font-size: 12px;
+      color: gray;
+      margin-top: 10px;
+    }
+  </style>
 </head>
-<body style="font-family: Arial; text-align: center;">
 
-  <h1>Web Proxy</h1>
+<body>
 
-  <input id="url" placeholder="https://example.com" style="width:300px;">
-  <button onclick="go()">Go</button>
+  <div class="header">
+    <img src="logo.png" class="logo">
+    <h2>RProx</h2>
 
-  <br><br>
+    <div class="search-box">
+      <input id="url" placeholder="Enter URL (example.com)">
+      <button onclick="go()">Go</button>
+    </div>
+  </div>
 
-  <iframe id="frame" style="width:90%; height:500px;"></iframe>
+  <iframe id="frame"></iframe>
+
+  <div class="footer">
+    Simple proxy • Some sites may not work
+  </div>
 
   <script>
     function go() {
       let url = document.getElementById("url").value;
-      document.getElementById("frame").src = "/proxy?url=" + encodeURIComponent(url);
+
+      if (!url.startsWith("http://") && !url.startsWith("https://")) {
+        url = "https://" + url;
+      }
+
+      document.getElementById("frame").src =
+        "/?url=" + encodeURIComponent(url);
     }
   </script>
 
